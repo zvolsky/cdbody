@@ -1,0 +1,24 @@
+https://developer.chrome.com/extensions/getstarted
+
+chrome://extensions
+Developer mode: -> On
+Load unpacked
+Reload
+
+3 úrovně ladění/inspect:
+- "background view" v extension kartě,
+- rightclick v popupu (nebo na ikoně extensiony)
+- rightclick v ovládané záložce (pro injektovaný javascript)
+
+https://unsplash.com/search/photos/train
+
+buymeacoffee:
+a.bmc-button jsem přidal: style="display: block !important"
+
+pack:
+key se neuvede, naopak získám cdbody.pem (přesunuto do ~/.ssh/), ten se uvede při pozdějším updatu
+
+hosting:
+https://developer.chrome.com/extensions/hosting  # zde link na Developer Dashboard:
+https://chrome.google.com/webstore/developer/dashboard
+chce nahrát zip, ne crx - udělal jsem kopii do dist/, bez pomocných souborů
