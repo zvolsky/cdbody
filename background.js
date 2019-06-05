@@ -9,6 +9,15 @@ chrome.runtime.onInstalled.addListener(function() {
       chrome.declarativeContent.onPageChanged.addRules([{
         conditions: [new chrome.declarativeContent.PageStateMatcher({
           pageUrl: {hostEquals: 'www.cd.cz'},
+        }),
+        new chrome.declarativeContent.PageStateMatcher({
+          pageUrl: {hostEquals: 'www.regiojet.cz'},
+        }),
+        new chrome.declarativeContent.PageStateMatcher({
+          pageUrl: {hostEquals: 'shop.regiojet.cz'},
+        }),
+        new chrome.declarativeContent.PageStateMatcher({
+          pageUrl: {hostEquals: 'jizdenky.regiojet.cz'},
         })
         ],
             actions: [new chrome.declarativeContent.ShowPageAction()]

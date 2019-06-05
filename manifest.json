@@ -1,6 +1,6 @@
 {
     "name": "ČD Body - zitranavylet.cz",
-    "version": "1.0.5",
+    "version": "1.1",
     "description": "Zjistí expiraci ČD bodů",
     "permissions": ["activeTab", "declarativeContent"],
     "background": {
