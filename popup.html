@@ -8,6 +8,20 @@
         min-height: 30px;
         min-width: 220px;
       }
+      a.lnkBtn {
+        font-family: 'Arial' !important;
+        font-size: 14px !important;
+        margin-right: 50px;
+      }
+      div.lnkGrp {
+        margin-top: 5px;
+      }
+      div.otherGrp > a {
+        background-color: green !important;
+      }
+      div.tranGrp > a {
+        background-color: #99f !important;
+      }
     </style>
   </head>
   <body>
@@ -31,12 +45,33 @@ box-shadow: 0px 1px 2px 2px rgba(190, 190, 190, 0.5) !important;opacity: 0.85 !i
 </style>
 <link href="https://fonts.googleapis.com/css?family=Cookie" rel="stylesheet">
 
-      <a class="bmc-button" id="mapaBtn" target="_blank" style="font-family: 'Arial' !important; font-size: 14px !important; background-color: #99f !important; margin-right: 50px;">
-        <span style="margin-left:5px">Mapa</span></a>
-      <a class="bmc-button" id="pocasiBtn" target="_blank" style="font-family: 'Arial' !important; font-size: 14px !important; background-color: #99f !important; margin-right: 50px;">
-        <span style="margin-left:5px">Počasí</span></a>
-      <div style="margin-top: 5px;">
-          <a class="bmc-button" id="razeniBtn" target="_blank" href="https://www.zelpage.cz/razeni" style="font-family: 'Arial' !important; font-size: 14px !important; background-color: #99f !important;">
+      <div class="lnkGrp otherGrp">
+          <a class="bmc-button lnkBtn" id="mapaBtn" target="_blank">
+            <span style="margin-left:5px">Mapa</span></a>
+          <a class="bmc-button lnkBtn" id="pocasiBtn" target="_blank">
+            <span style="margin-left:5px">Počasí</span></a>
+          <a class="bmc-button lnkBtn" id="googleBtn" target="_blank">
+            <span style="margin-left:5px">Google</span></a>
+      </div>
+
+      <div class="lnkGrp tranGrp">
+          <a class="bmc-button lnkBtn" id="mhdBtn" target="_blank">
+            <span style="margin-left:5px">MHD</span></a>
+          <a class="bmc-button lnkBtn" id="taxiBtn" target="_blank">
+            <span style="margin-left:5px">Taxi</span></a>
+      </div>
+
+      <div class="lnkGrp otherGrp">
+          <a class="bmc-button lnkBtn" id="ubytovaniBtn" target="_blank">
+            <span style="margin-left:5px">Ubytování</span></a>
+          <a class="bmc-button lnkBtn" id="airbnbBtn" target="_blank">
+            <span style="margin-left:5px">Airb</span></a>
+          <a class="bmc-button lnkBtn" id="bookingBtn" target="_blank">
+            <span style="margin-left:5px">Book</span></a>
+      </div>
+
+      <div class="lnkGrp tranGrp">
+          <a class="bmc-button lnkBtn tranBtn" id="razeniBtn" target="_blank" href="https://www.zelpage.cz/razeni">
             <span style="margin-left:5px">Řazení vlaků</span></a>
           <div id="razeniEl"></div>
       </div>

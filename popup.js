@@ -6,15 +6,150 @@
 
 let mapaUrlBase = 'https://mapy.cz/turisticka';   // https://mapy.cz/turisticka?q=Lhota
 let pocasiUrlBase = 'https://www.yr.no';          // https://www.yr.no/soek/soek.aspx?sted=Lhota
+let googleUrlBase = 'https://www.google.com/search?q=';
+let airbnbUrlBase = 'https://www.airbnb.com';
+let bookingUrlBase = 'https://www.booking.com';
+let mhdUrlBase1 = 'https://jizdnirady.idnes.cz/';
+let mhdUrlBase2 = '/spojeni/';
 let mapaQ = '';
 let pocasiQ = '';
 let tit2 = "není zjištěn cíl cesty";
 
-function stripSuffix(query, suffix) {
-    if (query.indexOf(suffix) + suffix.length === query.length) {
-        return query.substr(0, query.length - suffix.length);
+let mhdMap = new Map([
+['adamov',''],
+['aš','as'],
+['benešov','benesov'],
+['beroun',''],
+['bílina','bilina'],
+['blansko',''],
+['brandýs n.l.-st.bol.','pid'],  // nebo: brandys
+['brandýs nad labem-stará boleslav','pid'],
+['brandýs n.l. - st.bol.','pid'],
+['brandýs nad labem - stará boleslav','pid'],
+['stará boleslav','pid'],
+['brno',''],
+['bruntál','bruntal'],
+['břeclav','breclav'],
+['bystřice nad pernštejnem','bystrice'],
+['čáslav','caslav'],
+['česká lípa','ceskalipa'],
+['české budějovice','ceskebudejovice'],
+['český krumlov','ceskykrumlov'],
+['český těšín','ceskytesin'],
+['dačice','dacice'],
+['děčín','decin'],
+['domažlice','domazlice'],
+['duchcov',''],
+['dvůr králové','dvurkralove'],
+['dvůr králové n.l.','dvurkralove'],
+['dvůr králové n. l.','dvurkralove'],
+['frýdek-místek','frydekmistek'],
+['frýdek - místek','frydekmistek'],
+['havířov','havirov'],
+['havlíčkův brod','havlickuvbrod'],
+['hodonín','hodonin'],
+['hradec králové','hradeckralove'],
+['hranice',''],
+['hranice na morave','hranice'],
+['hustopeče','hustopece'],
+['cheb',''],
+['chomutov',''],
+['chrudim',''],
+['jablonec nad nisou','jablonec'],
+['jáchymov','jachymov'],
+['jičín','jicin'],
+['jihlava',''],
+['jindřichův hradec','jindrichuvhradec'],
+['kadaň','kadan'],
+['karlovy vary','karlovyvary'],
+['karviná','karvina'],
+['kladno','pid'],
+['klášterec nad ohří','klasterecnadohri'],
+['klatovy',''],
+['kolín','kolin'],
+['kostelec nad orlicí','kostelecnadorlici'],
+['kralupy nad vltavou','pid'],
+['krnov',''],
+['kroměříž','kromeriz'],
+['kutná Hora','kutnahora'],
+['kyjov',''],
+['liberec',''],
+['litoměřice','litomerice'],
+['litomyšl','litomysl'],
+['louny',''],
+['lovosice',''],
+['mariánské lázně','marianskelazne'],
+['milevsko',''],
+['mladá boleslav','mladaboleslav'],
+['mníšek pod brdy','pid'],
+['moravská třebová','moravskatrebova'],
+['most',''],
+['litvínov','most'],
+['náchod','nachod'],
+['nové město na moravě','novemestonamorave'],
+['nový jičín','novyjicin'],
+['olomouc',''],
+['opava',''],
+['orlová','orlova'],
+['ostrava',''],
+['ostrov',''],
+['ostrov nad ohří','ostrov'],
+['pardubice',''],
+['pelhřimov','pelhrimov'],
+['písek','pisek'],
+['plzeň','plzen'],
+['polička','policka'],
+['praha','pid'],
+['prostějov','prostejov'],
+['přelouč','prelouc'],
+['přerov','prerov'],
+['přeštice','prestice'],
+['příbram','pid'],
+['rokycany',''],
+['roudnice nad labem','roudnice'],
+['rychnov nad Kněžnou','rychnov'],
+['říčany','ricany'],
+['slaný','slany'],
+['sokolov',''],
+['strakonice',''],
+['stříbro','stribro'],
+['studénka','studenka'],
+['spindlerův mlýn','spindleruvmlyn'],
+['štětí','steti'],
+['šumperk','sumperk'],
+['tábor','tabor'],
+['tachov',''],
+['teplice',''],
+['trutnov',''],
+['třebíč','trebic'],
+['třinec','trinec'],
+['turnov',''],
+['týniště nad orlicí','tynistenadorlici'],
+['uherské hradiště','uherskehradiste'],
+['ústí nad labem','ustinadlabem'],
+['ústí nad orlicí','ustinadorlici'],
+['valašské meziříčí','valasskemezirici'],
+['varnsdorf',''],
+['velké meziříčí','velkemezirici'],
+['vimperk',''],
+['vlašim','vlasim'],
+['vrchlabí','vrchlabi'],
+['vsetín','vsetin'],
+['vyškov','vyskov'],
+['zábřeh','zabreh'],
+['zlín',''],
+['otrokovice','zlin'],
+['znojmo',''],
+['žamberk','zamberk'],
+['žatec','zatec'],
+['žďár nad sázavou','zdarnadsazavou']
+]);
+
+function stripSfx(q, sfx) {
+    if ((q.indexOf(sfx) + sfx.length) === q.length) {
+        return q.substr(0, q.length - sfx.length);
     }
-    return query;
+    return q;
 }
 
 function fixHref(query) {
@@ -22,16 +157,42 @@ function fixHref(query) {
     document.getElementById('mapaBtn').setAttribute('href', mapaUrlBase + (query ? ('?q=' + query) : ''));
     document.getElementById('mapaBtn').setAttribute('title', query ? query : tit2);
     if (query) {
-        query = stripSuffix(query, ' hl.n.');
-        query = stripSuffix(query, ' zast.');
-        query = stripSuffix(query, ' z.');
-        query = stripSuffix(query, ' město');
-        query = stripSuffix(query, ' předm.');
-        query = stripSuffix(query, ', žel. st.');    // regiojet
-        query = stripSuffix(query, ', autobusové nádraží');
+        query = stripSfx(query, ' hl.n.');
+        query = stripSfx(query, ' zast.');
+        //query = stripSfx(query, ' z.');    // bug ???
+        if (query.indexOf(' z.') > 0) {query = query.substr(0, query.length - 3);}
+        //if ((query.indexOf(' z.') + ' z.'.length) === query.length) {query = query.substr(0, query.length - 3)}
+        query = stripSfx(query, ' město');
+        query = stripSfx(query, ' předm.');
+        query = stripSfx(query, ', autobusové nádraží');
+        //query = stripSfx(query, ', žel. st.');    // bug ???
+        if (query.indexOf(', žel. st.') > 0) {query = query.substr(0, query.length - 10);}
     }
+console.log(query);
     document.getElementById('pocasiBtn').setAttribute('href', pocasiUrlBase + (query ? ('/soek/soek.aspx?sted=' + query) : ''));
     document.getElementById('pocasiBtn').setAttribute('title', query ? query : tit2);
+
+    let mhd = mhdMap.get(query.toLowerCase())
+    if (mhd === '') {  // není potřeba kopírovat v hmdMap identické
+        mhd = query;
+    }
+    if (!mhd) {
+        mhd = 'pid';
+    }
+    document.getElementById('mhdBtn').setAttribute('href', mhdUrlBase1 + mhd + mhdUrlBase2);
+    document.getElementById('mhdBtn').setAttribute('title', mhd === 'pid' ? "Pražská integrovaná doprava" : ('MHD: ' + query));
+    document.getElementById('taxiBtn').setAttribute('href', googleUrlBase + 'taxi' + (query ? ('+' + query) : ''));
+    document.getElementById('taxiBtn').setAttribute('title', query ? 'taxi: ' + query : tit2);
+
+    document.getElementById('ubytovaniBtn').setAttribute('href', googleUrlBase + 'ubytování+accommodation' + (query ? ('+' + query) : ''));
+    document.getElementById('ubytovaniBtn').setAttribute('title', query ? 'ubytování: ' + query : tit2);
+    document.getElementById('airbnbBtn').setAttribute('href', airbnbUrlBase + (query ? ('/s/' + query) : ''));
+    document.getElementById('airbnbBtn').setAttribute('title', query ? 'airbnb: ' + query : tit2);
+    document.getElementById('bookingBtn').setAttribute('href', bookingUrlBase + (query ? ('/searchresults.cs.html?ss=' + query) : ''));
+    document.getElementById('bookingBtn').setAttribute('title', query ? 'booking: ' + query : tit2);
+
+    document.getElementById('googleBtn').setAttribute('href', googleUrlBase + (query ? query : ''));
+    document.getElementById('googleBtn').setAttribute('title', query ? 'najdi na Google: ' + query : tit2);
 }
 fixHref('');
 
@@ -58,27 +219,31 @@ let initCode = `
                 cdB_retArr.q = document.getElementById('connectionsearchbox-hp-o').getElementsByTagName('input')[3].value;
             } else if (cdB_retArr.url.pathname.indexOf('/spojeni') >= 0) {  // /eshop/spojeni- i /spojeni-a-jizdenka
                 let cdB_tmp = document.getElementById('connectionlistanchor');
-                cdB_retArr.q = cdB_tmp.getElementsByClassName('res-cityname')[3].getElementsByTagName('a')[0].text
-                // ************************************************************** řazení
-                cdB_tmp = cdB_tmp.getElementsByClassName('result-col1');
-                for (let cdB_i = 0; cdB_i < cdB_tmp.length; cdB_i++) {
-                    let cdB_tmp2 = cdB_tmp[cdB_i].getElementsByClassName('rc2');
-                    let cdB_prvni = true;
-                    for (let cdB_j = 0; cdB_j < cdB_tmp2.length; cdB_j++) {
-                        let cdB_tmp3 = cdB_tmp2[cdB_j].getElementsByClassName('res-infextra');
-                        if (cdB_tmp3.length > 0) {    // poslední (příjezdový) řádek totiž číslo vlaku nemá
-                            let cdB_time = cdB_tmp2[cdB_j].getElementsByClassName('res-time');
-                            if (cdB_time.length > 0) {   // hlavní odjezd
-                                cdB_time = cdB_time[0].innerText;
-                            } else {                     // odjezd na přestupu
-                                cdB_time = cdB_tmp2[cdB_j].getElementsByClassName('res-smalltimecommon')[0].getElementsByTagName('span')[1].childNodes[6].textContent;
-                            }
-                            cdB_retArr.razeni.push([cdB_prvni, cdB_time, cdB_tmp3[0].innerText]);
-                            cdB_prvni = false;
-                        };
+                if (cdB_tmp) {
+                    cdB_retArr.q = cdB_tmp.getElementsByClassName('res-cityname')[3].getElementsByTagName('a')[0].text;
+                    // ************************************************************** řazení
+                    cdB_tmp = cdB_tmp.getElementsByClassName('result-col1');
+                    for (let cdB_i = 0; cdB_i < cdB_tmp.length; cdB_i++) {
+                        let cdB_tmp2 = cdB_tmp[cdB_i].getElementsByClassName('rc2');
+                        let cdB_prvni = true;
+                        for (let cdB_j = 0; cdB_j < cdB_tmp2.length; cdB_j++) {
+                            let cdB_tmp3 = cdB_tmp2[cdB_j].getElementsByClassName('res-infextra');
+                            if (cdB_tmp3.length > 0) {    // poslední (příjezdový) řádek totiž číslo vlaku nemá
+                                let cdB_time = cdB_tmp2[cdB_j].getElementsByClassName('res-time');
+                                if (cdB_time.length > 0) {   // hlavní odjezd
+                                    cdB_time = cdB_time[0].innerText;
+                                } else {                     // odjezd na přestupu
+                                    cdB_time = cdB_tmp2[cdB_j].getElementsByClassName('res-smalltimecommon')[0].getElementsByTagName('span')[1].childNodes[6].textContent;
+                                }
+                                cdB_retArr.razeni.push([cdB_prvni, cdB_time, cdB_tmp3[0].innerText]);
+                                cdB_prvni = false;
+                            };
+                        }
                     }
+                } else {  // /spojeni-a-jizdenka před vyhledáním -- stejné jako v eshopu  // TODO: optimizovat if/else?
+                    cdB_retArr.q = document.getElementById('fromto').getElementsByTagName('input')[2].value;
                 }
-            } else if (cdB_retArr.url.pathname.indexOf('/eshop') === 0) {
+            } else if (cdB_retArr.url.pathname.indexOf('/eshop') === 0) {  // eshop před vyhledáním (po vyhledání obsahuje url i /spojeni..)
                 cdB_retArr.q = document.getElementById('fromto').getElementsByTagName('input')[2].value;
             }
         } else if (cdB_retArr.url.hostname === "www.regiojet.cz") {
