@@ -18,6 +18,9 @@ chrome.runtime.onInstalled.addListener(function() {
         }),
         new chrome.declarativeContent.PageStateMatcher({
           pageUrl: {hostEquals: 'jizdenky.regiojet.cz'},
+        }),
+        new chrome.declarativeContent.PageStateMatcher({
+          pageUrl: {hostEquals: 'jizdnirady.idnes.cz'},
         })
         ],
             actions: [new chrome.declarativeContent.ShowPageAction()]

@@ -1,9 +1,14 @@
+// TODO: setTimeout rekurzivni, momentalne vypnut
+// TODO: <br> chybí nefungují?
+
+
 'use strict';
 
 let mapaUrlBase = 'https://mapy.cz/turisticka';   // https://mapy.cz/turisticka?q=Lhota
 let pocasiUrlBase = 'https://www.yr.no';          // https://www.yr.no/soek/soek.aspx?sted=Lhota
 let mapaQ = '';
 let pocasiQ = '';
+let tit2 = "není zjištěn cíl cesty";
 
 function stripSuffix(query, suffix) {
     if (query.indexOf(suffix) + suffix.length === query.length) {
@@ -15,6 +20,7 @@ function stripSuffix(query, suffix) {
 function fixHref(query) {
     query = query.replace(' - AN', ', autobusové nádraží');  // AN: regiojet
     document.getElementById('mapaBtn').setAttribute('href', mapaUrlBase + (query ? ('?q=' + query) : ''));
+    document.getElementById('mapaBtn').setAttribute('title', query ? query : tit2);
     if (query) {
         query = stripSuffix(query, ' hl.n.');
         query = stripSuffix(query, ' zast.');
@@ -25,6 +31,7 @@ function fixHref(query) {
         query = stripSuffix(query, ', autobusové nádraží');
     }
     document.getElementById('pocasiBtn').setAttribute('href', pocasiUrlBase + (query ? ('/soek/soek.aspx?sted=' + query) : ''));
+    document.getElementById('pocasiBtn').setAttribute('title', query ? query : tit2);
 }
 fixHref('');
 
@@ -44,12 +51,33 @@ let initCode = `
     cdB_retArr.url = new URL(window.location.href);
     cdB_retArr.host = cdB_retArr.url.hostname;
     cdB_retArr.q = '';
+    cdB_retArr.razeni = [];
     function cdB_getQ() {
         if (cdB_retArr.url.hostname === "www.cd.cz") {
             if (cdB_retArr.url.pathname === '/default.htm') {
                 cdB_retArr.q = document.getElementById('connectionsearchbox-hp-o').getElementsByTagName('input')[3].value;
             } else if (cdB_retArr.url.pathname.indexOf('/spojeni') >= 0) {  // /eshop/spojeni- i /spojeni-a-jizdenka
-                cdB_retArr.q = document.getElementById('connectionlistanchor').getElementsByClassName('res-cityname')[3].getElementsByTagName('a')[0].text
+                let cdB_tmp = document.getElementById('connectionlistanchor');
+                cdB_retArr.q = cdB_tmp.getElementsByClassName('res-cityname')[3].getElementsByTagName('a')[0].text
+                // ************************************************************** řazení
+                cdB_tmp = cdB_tmp.getElementsByClassName('result-col1');
+                for (let cdB_i = 0; cdB_i < cdB_tmp.length; cdB_i++) {
+                    let cdB_tmp2 = cdB_tmp[cdB_i].getElementsByClassName('rc2');
+                    let cdB_prvni = true;
+                    for (let cdB_j = 0; cdB_j < cdB_tmp2.length; cdB_j++) {
+                        let cdB_tmp3 = cdB_tmp2[cdB_j].getElementsByClassName('res-infextra');
+                        if (cdB_tmp3.length > 0) {    // poslední (příjezdový) řádek totiž číslo vlaku nemá
+                            let cdB_time = cdB_tmp2[cdB_j].getElementsByClassName('res-time');
+                            if (cdB_time.length > 0) {   // hlavní odjezd
+                                cdB_time = cdB_time[0].innerText;
+                            } else {                     // odjezd na přestupu
+                                cdB_time = cdB_tmp2[cdB_j].getElementsByClassName('res-smalltimecommon')[0].getElementsByTagName('span')[1].childNodes[6].textContent;
+                            }
+                            cdB_retArr.razeni.push([cdB_prvni, cdB_time, cdB_tmp3[0].innerText]);
+                            cdB_prvni = false;
+                        };
+                    }
+                }
             } else if (cdB_retArr.url.pathname.indexOf('/eshop') === 0) {
                 cdB_retArr.q = document.getElementById('fromto').getElementsByTagName('input')[2].value;
             }
@@ -73,6 +101,37 @@ let initCode = `
                 }
             } else {                                                      // vyhledávání
                 cdB_retArr.q = document.getElementById('destination_to').value;
+            }
+        } else if (cdB_retArr.url.hostname === "jizdnirady.idnes.cz") {
+            let cdB_tmp = document.getElementById('main-res-inner');
+            if (cdB_tmp) {         // výsledky vyhledávání ?
+                cdB_tmp = cdB_tmp.getElementsByTagName('h1');
+                if (cdB_tmp.length >= 1) {
+                    cdB_tmp = cdB_tmp[0].textContent;
+                    cdB_retArr.q = cdB_tmp.substr(cdB_tmp.indexOf('» ') + 2);
+                    // ********************************************************** řazení
+                    cdB_tmp = document.getElementById('main-res-inner');
+                    cdB_tmp = cdB_tmp.getElementsByTagName('tbody');
+                    for (let cdB_i = 0; cdB_i < cdB_tmp.length; cdB_i++) {
+                        let cdB_tmp2 = cdB_tmp[cdB_i].getElementsByClassName('datarow');
+                        let cdB_prvni = true;
+                        for (let cdB_j = 0; cdB_j < cdB_tmp2.length - 1; cdB_j++) {   // -1 : poslední řádek je příjezd
+                            let cdB_tmp3 = cdB_tmp2[cdB_j].getElementsByTagName('td');
+                            cdB_retArr.razeni.push([cdB_prvni, cdB_tmp3[4].innerText, cdB_tmp3[cdB_tmp3.length - 1].getElementsByTagName('a')[0].innerText]);
+                                // .length-1 : číslo vlaku; před ním totiž je poznámka a v ní mohou být vnořená <td>, tj. poslední je např. [6] nebo [8]
+                            cdB_prvni = false;
+                        }
+                    }
+                }
+            }
+            if (!cdB_retArr.q) {   // s předchozím jsme se nechytli; tak snad jsme na zadávání (url se neliší)
+                cdB_tmp = document.getElementById('main-form-inner');
+                if (cdB_tmp) {
+                    cdB_tmp = cdB_tmp.getElementsByClassName('inp-text');
+                    if (cdB_tmp.length >= 2) {
+                        cdB_retArr.q = cdB_tmp[1].value;
+                    }
+                }
             }
         }
     }
@@ -191,19 +250,49 @@ function body2res(r) {
 
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     let timeout = 100;  // první stránku rychle, potom zvětšíme
+    let razeniUrl = "https://www.zelpage.cz/razeni/" + new Date().getFullYear().toString().substr(2) + "/vlaky/cd-";
+
+    let cdCz = tabs[0].url.indexOf('//www.cd.cz') > 0;
+
+    function cisloVlaku(oznaceni) {
+        if (!oznaceni) {
+            return '';
+        }
+        let max4 = false;
+        if ('0123456789'.indexOf(oznaceni[0]) >= 0) {
+            max4 = true;   // kvůli IC, EC,.., které značí netextově: ikonou
+        }
+        let cislo = '';
+        for (let i = 0; i < oznaceni.length; i++) {
+            if ('0123456789'.indexOf(oznaceni[i]) >= 0) {
+                cislo += oznaceni[i]
+            } else if (cislo) {
+                break;
+            }
+        }
+        if (cislo.length >= 2 && (!max4 || cislo.length <= 4)) {
+            return cislo;
+        } else {
+            return '';
+        }
+    }
+
+    function nejakyVlak(razeni) {
+        return razeni.indexOf('</a>') > 0;
+    }
 
     function step() {
         if (resultsEl.innerHTML && resultsEl.innerHTML !== pleaseWait) {
             return;   // vždy je naplánován další krok; poslední (už po předání výsledku) proto nebude dělat nic
         }
-        let hledejBody = true;
+
         setTimeout(function() {
             chrome.tabs.executeScript(
                 tabs[0].id,
                 {code: initCode + code},
                 function(retArr) {
                     if (retArr[0]) {  // z nerozpoznaného důvodu toto někdy běží i když retArr[0] není definováno
-                        if (retArr[0].host === 'www.cd.cz') {
+                        if (cdCz) {
                             if (retArr[0].done) {
                                 if (!retArr[0].res) {
                                     body2res(retArr[0]);
@@ -212,8 +301,6 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                             } else {
                                 resultsEl.innerHTML = pleaseWait;
                             }
-                        } else {
-                            hledejBody = false;
                         }
 
                         // *******************************************************
@@ -221,11 +308,35 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                             fixHref(retArr[0].q);
                         }
                         // *******************************************************
+                        if (retArr[0].razeni && retArr[0].razeni.length > 0) {
+                            let htmlRazeni = '';
+                            let razeni1 = '';
+                            for (let i = 0; i < retArr[0].razeni.length; i++) {
+                                let vlak = cisloVlaku(retArr[0].razeni[i][2]);
+                                if (vlak) {
+                                    htmlRazeni += (retArr[0].razeni[i][0] ? '<b>' : '')
+                                            + '<a target="_blank" href="' + razeniUrl + vlak + '" title="' +retArr[0].razeni[i][2] + '">'
+                                            + retArr[0].razeni[i][1] + '</a>'
+                                            + (retArr[0].razeni[i][0] ? '</b>' : '') + ' ';
+                                } else if (retArr[0].razeni[i][0]) {   // první čas i tehdy, když to není vlak
+                                    if (nejakyVlak(razeni1)) {
+                                        htmlRazeni += '<div>' + razeni1 + '</div>';  // <div>,<br>,<p> - vše ignorováno ??
+                                    }
+                                    razeni1 = '<b>' + retArr[0].razeni[i][1] + '</b>';
+                                }
+                            }
+                            if (nejakyVlak(razeni1)) {
+                                htmlRazeni += '<div>' + razeni1 + '</div>';
+                            }
+                            razeniEl.innerHTML = htmlRazeni;
+                        } else {
+                            razeniEl.innerHTML = '';
+                        }
                     }
                 }
             );
             initCode = '';   // nesmí být vně, jinak se initCode neprovede !
-            if (hledejBody) {
+            if (cdCz) {
                 step();
             }
         }, timeout);
